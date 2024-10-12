@@ -1,11 +1,13 @@
-from flask import Flask, render_template, request, Response, send_file
+from flask import Flask, render_template, request, Response, send_file, jsonify
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import requests
 import io
+import pandas as pd
 
 app = Flask(__name__)
 results = []  # Declare a global variable to store results
+cancel_crawl = False  # Flag to cancel the crawl
 
 def extract_links_from_page(url):
     """Extracts all hyperlinks from a given page's HTML content."""
@@ -25,10 +27,6 @@ def extract_links_from_page(url):
         # Extract from <link> tags with href attributes
         for tag in soup.find_all('link', href=True):
             links.append(urljoin(url, tag['href']))
-
-        # # Extract from <script> tags with src attributes
-        # for tag in soup.find_all('script', src=True):
-        #     links.append(urljoin(url, tag['src']))
 
         # Extract from <img> tags with src attributes
         for tag in soup.find_all('img', src=True):
@@ -63,60 +61,88 @@ def index():
 
 @app.route('/crawl', methods=['POST'])
 def crawl():
-    global results
+    global results, cancel_crawl
     results = []  # Reset results for each crawl
-    dead_links = []  # List to store dead links
+    cancel_crawl = False  # Reset the cancel flag
 
     base_url = request.form['url']
     visited_pages = set()
-    links_checked = set()
     queue = [base_url]
 
     def generate():
+        global cancel_crawl
         while queue:
-            current_page = queue.pop(0)
+            if cancel_crawl:
+                break  # Stop the crawl if cancel_crawl flag is True
 
+            current_page = queue.pop(0)
             if current_page in visited_pages:
                 continue
 
             visited_pages.add(current_page)
             links, page_status = extract_links_from_page(current_page)
-            page_info = f"Page: {current_page} - Status: {page_status}\n"
-            yield f"data:{page_info}\n\n"
-            results.append(page_info)
-
+            page_info = (current_page, page_status, [])  # Store page URL, status, and list for links
+            yield f"data:Page: {current_page} - Status: {page_status}\n\n"
+            
             if page_status == 200:
                 for link in links:
-                    if link not in links_checked:
-                        link_status = check_link_status(link)
-                        link_info = f"    {link} - Status: {link_status if link_status else 'Could not retrieve'}\n"
-                        yield f"data:{link_info}\n\n"
-                        results.append(link_info)
-                        links_checked.add(link)
+                    if cancel_crawl:
+                        break  # Stop processing links if cancelled
 
-                        if link_status != 200:
-                            dead_links.append(link_info)
+                    link_status = check_link_status(link)
+                    link_info = (link, link_status if link_status else 'Could not retrieve')
+                    yield f"data:    {link} - Status: {link_info[1]}\n"
+                    page_info[2].append(link_info)
 
-                        if link_status == 200 and is_internal_link(link, base_url):
-                            queue.append(link)
+                    # Add internal links to the queue
+                    if link_status == 200 and is_internal_link(link, base_url) and link not in visited_pages:
+                        queue.append(link)
 
-        # Add dead links summary at the beginning of the results
-        if dead_links:
-            dead_links_summary = "Dead Links:\n" + "".join(dead_links) + "\n\n"
-            results.insert(0, dead_links_summary)
+            results.append(page_info)  # Append the page info to results
 
         # Signal the end of crawling
         yield f"data:done\n\n"
 
     return Response(generate(), mimetype='text/event-stream')
 
+@app.route('/results_table')
+def results_table():
+    global results
+
+    # Flatten the results into a list of dictionaries, so each row has a 'Source', 'URL', and 'Status'
+    data = []
+    for page_url, page_status, links in results:
+        # Add the page itself as a row
+        data.append({'Source': 'Page', 'URL': page_url, 'Status': page_status})
+        
+        # Add each link found on the page
+        for link_url, link_status in links:
+            data.append({'Source': f'Link from {page_url}', 'URL': link_url, 'Status': link_status})
+
+    # Return data as JSON
+    return jsonify(data)
+
+
 @app.route('/download')
 def download():
     global results
     output = io.BytesIO()
-    output.write("".join(results).encode('utf-8'))  # Encode the text to bytes
+    
+    # Prepare the text output with the structure: page -> links found on page
+    for page_url, page_status, links in results:
+        output.write(f"Page: {page_url} - Status: {page_status}\n".encode('utf-8'))
+        for link_url, link_status in links:
+            output.write(f"    {link_url} - Status: {link_status}\n".encode('utf-8'))
+        output.write("\n".encode('utf-8'))  # Add a blank line after each page block
+    
     output.seek(0)
     return send_file(output, as_attachment=True, download_name='results.txt', mimetype='text/plain')
+
+@app.route('/cancel', methods=['POST'])
+def cancel():
+    global cancel_crawl
+    cancel_crawl = True  # Set the cancel flag to True
+    return "Crawl cancelled", 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5009)

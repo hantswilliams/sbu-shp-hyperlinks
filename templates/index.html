@@ -3,54 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Link Checker</title>
+    <title>Website Link Health Checker</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-900 font-sans leading-normal tracking-normal">
     <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4">Website Link Checker</h1>
+        <h1 class="text-3xl font-bold mb-4 text-center">Website Link Health Checker</h1>
         
-        <form id="crawl-form" action="/crawl" method="POST">
-            <div class="flex mb-2">
+        <form id="crawl-form" action="/crawl" method="POST" class="text-center">
+            <div class="flex justify-center mb-2">
                 <select id="protocol" class="p-2 border border-gray-300 rounded-l bg-white">
                     <option value="https://">https://</option>
                     <option value="http://">http://</option>
                 </select>
-                <input type="text" name="url" id="url-input" placeholder="Enter website URL (e.g., example.com)" class="p-2 border border-gray-300 rounded-r w-full" required>
+                <input type="text" name="url" id="url-input" placeholder="Enter website URL (e.g., example.com)" class="p-2 border border-gray-300 rounded-r w-full sm:w-3/4" required>
             </div>
             <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Start Crawl</button>
+            <button type="button" id="stop-button" class="bg-red-500 text-white p-2 ml-2 rounded hover:bg-red-600 hidden">Stop Crawl</button>
         </form>
 
-        <div class="mt-4">
+        <div class="mt-4 text-center">
+            <h2 class="text-2xl font-semibold mb-2">Elapsed Time</h2>
+            <p id="timer" class="text-xl font-mono text-gray-800">0:00</p>
+        </div>
+        
+        <div class="mt-4 text-center">
             <h2 class="text-2xl font-semibold mb-2">Terminal Output</h2>
-            <pre id="output" class="p-4 bg-black text-green-400 h-64 overflow-y-scroll rounded"></pre>
+            <pre id="output" class="p-4 bg-black text-green-400 h-64 overflow-y-scroll rounded max-w-full"></pre>
         </div>
 
-        <div class="mt-4">
+        <div class="mt-4 text-center">
             <h2 class="text-2xl font-semibold mb-2">Download Results</h2>
             <a id="download-link" href="/download" class="bg-green-500 text-white p-2 rounded hover:bg-green-600 hidden">Download Result File</a>
+        </div>
+
+        <div id="results-table-container" class="mt-4 text-center">
+            <h2 class="text-2xl font-semibold mb-2">Results Table</h2>
+            <div class="overflow-x-auto inline-block max-w-full">
+                <!-- Results table will be dynamically created here -->
+                <table id="results-table" class="table-auto w-full border-collapse text-left bg-white shadow-lg rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="px-4 py-2 border">Source</th>
+                            <th class="px-4 py-2 border">URL</th>
+                            <th class="px-4 py-2 border">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
+
         const outputElement = document.getElementById("output");
         const form = document.getElementById("crawl-form");
         const downloadLink = document.getElementById("download-link");
+        const stopButton = document.getElementById("stop-button");
         const protocol = document.getElementById("protocol");
         const urlInput = document.getElementById("url-input");
+        const resultsTableBody = document.querySelector("#results-table tbody");
+        const timerElement = document.getElementById("timer");
+
+        let crawlRequest = null;
+        let timerInterval = null;  // Store the interval ID
+        let startTime = 0;
 
         form.addEventListener("submit", function(event) {
             event.preventDefault();
             outputElement.textContent = "";  // Clear output area
             downloadLink.classList.add("hidden");  // Hide download link initially
-            
+            stopButton.classList.remove("hidden");  // Show the stop button
+            resultsTableBody.innerHTML = "";  // Clear previous results
+            startTimer();  // Start the timer
+
             // Concatenate the protocol with the entered URL
             const fullUrl = protocol.value + urlInput.value;
             const formData = new FormData();
             formData.append('url', fullUrl);
 
             // Fetch request to start crawling
-            fetch('/crawl', { method: "POST", body: formData })
+            crawlRequest = fetch('/crawl', { method: "POST", body: formData })
                 .then(response => {
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
@@ -58,21 +92,72 @@
                         reader.read().then(({ done, value }) => {
                             if (done) {
                                 downloadLink.classList.remove("hidden");  // Show download link once done
+                                stopButton.classList.add("hidden");  // Hide stop button when done
+                                stopTimer();  // Stop the timer
+                                fetchResultsTable();  // Dynamically load the results table
                                 return;
                             }
                             const chunk = decoder.decode(value);
-                            if (chunk.trim() === "done") {
-                                downloadLink.classList.remove("hidden");  // Show download link if "done"
-                            } else {
-                                outputElement.textContent += chunk;
-                                outputElement.scrollTop = outputElement.scrollHeight;
-                                read();
-                            }
+                            outputElement.textContent += chunk;
+                            outputElement.scrollTop = outputElement.scrollHeight;
+                            read();
                         });
                     }
                     read();
                 });
         });
+
+        stopButton.addEventListener("click", function() {
+            fetch('/cancel', { method: "POST" }).then(() => {
+                stopButton.classList.add("hidden");  // Hide stop button after stopping
+                downloadLink.classList.remove("hidden");  // Show download link to download partial results
+                stopTimer();  // Stop the timer
+                if (crawlRequest) {
+                    crawlRequest.abort();  // Attempt to abort the fetch if possible
+                }
+                fetchResultsTable();  // Load the results table after stopping
+            });
+        });
+
+        // Function to start the timer
+        function startTimer() {
+            startTime = Date.now();
+            timerElement.textContent = "0:00";  // Reset the timer display
+            clearInterval(timerInterval);  // Clear any existing interval
+
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            }, 1000);
+        }
+
+        // Function to stop the timer
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // Function to fetch and display the results table
+        function fetchResultsTable() {
+            fetch('/results_table')
+                .then(response => response.json())
+                .then(data => {
+                    resultsTableBody.innerHTML = "";  // Clear any previous rows
+
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="px-4 py-2 border">${row.Source}</td>
+                            <td class="px-4 py-2 border"><a href="${row.URL}" target="_blank" class="text-blue-500 underline">${row.URL}</a></td>
+                            <td class="px-4 py-2 border ${row.Status === 200 ? 'text-green-500' : 'text-red-500'}">${row.Status}</td>
+                        `;
+                        resultsTableBody.appendChild(tr);
+                    });
+
+                });
+        }        
+
     </script>
 </body>
 </html>
