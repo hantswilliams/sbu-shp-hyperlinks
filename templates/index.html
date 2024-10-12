@@ -3,58 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Link Health Checker</title>
+    <title>URL Health Checker</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-900 font-sans leading-normal tracking-normal">
-    <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4 text-center">Website Link Health Checker</h1>
-        
-        <form id="crawl-form" action="/crawl" method="POST" class="text-center">
-            <div class="flex justify-center mb-2">
-                <select id="protocol" class="p-2 border border-gray-300 rounded-l bg-white">
+
+    <!-- Header Bar -->
+    <header class="bg-gray-800 text-white py-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center max-w-screen-lg">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 21H5a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v8.828a2 2 0 01-.586 1.414l-7.172 7.172a2 2 0 01-1.414.586z"></path>
+                </svg>
+                <h1 class="text-2xl font-bold">URL Health Checker</h1>
+            </div>
+            <span class="text-sm">Easily check the status of all links on a website</span>
+        </div>
+    </header>
+
+    <!-- Main Content Wrapper -->
+    <div class="container mx-auto p-12 max-w-screen-lg">
+        <!-- URL input -->
+        <form id="crawl-form" action="/crawl" method="POST" class="text-center mb-6">
+            <div class="flex justify-center items-center mb-2 bg-white shadow-md rounded-lg overflow-hidden">
+                <select id="protocol" class="p-2 bg-gray-100 border-none rounded-l-lg">
                     <option value="https://">https://</option>
                     <option value="http://">http://</option>
                 </select>
-                <input type="text" name="url" id="url-input" placeholder="Enter website URL (e.g., example.com)" class="p-2 border border-gray-300 rounded-r w-full sm:w-3/4" required>
+                <input type="text" name="url" id="url-input" placeholder="Enter website URL (e.g., example.com)" 
+                       class="p-3 w-full sm:w-3/4 border-none outline-none" required>
             </div>
-            <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Start Crawl</button>
-            <button type="button" id="stop-button" class="bg-red-500 text-white p-2 ml-2 rounded hover:bg-red-600 hidden">Stop Crawl</button>
+            <button type="submit" class="bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-800 inline-flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Start Check
+            </button>
+            <button type="button" id="stop-button" class="bg-gray-500 text-white py-2 px-4 ml-2 rounded-lg hover:bg-gray-600 inline-flex items-center hidden">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Stop Check
+            </button>
         </form>
-
+        
+        <!-- Timer section -->
         <div class="mt-4 text-center">
             <h2 class="text-2xl font-semibold mb-2">Elapsed Time</h2>
-            <p id="timer" class="text-xl font-mono text-gray-800">0:00</p>
+            <p id="timer" class="text-xl font-mono text-gray-700 mb-2">0:00</p>
+            <div class="w-3/4 mx-auto bg-gray-300 rounded-full h-2 overflow-hidden relative">
+                <div id="progress-bar" class="bg-gray-700 h-2 absolute left-0 top-0 w-full"></div>
+            </div>
         </div>
-        
-        <div class="mt-4 text-center">
+
+        <!-- Terminal Output -->
+        <div class="mt-6 text-center">
             <h2 class="text-2xl font-semibold mb-2">Terminal Output</h2>
-            <pre id="output" class="p-4 bg-black text-green-400 h-64 overflow-y-scroll rounded max-w-full"></pre>
+            <div class="relative bg-gray-900 text-green-400 h-64 overflow-y-scroll rounded-lg p-4 max-w-full">
+                <div class="absolute top-0 left-0 mt-2 ml-2 flex space-x-2">
+                    <span class="w-3 h-3 bg-gray-600 rounded-full"></span>
+                    <span class="w-3 h-3 bg-gray-600 rounded-full"></span>
+                    <span class="w-3 h-3 bg-gray-600 rounded-full"></span>
+                </div>
+                <pre id="output" class="pt-6"></pre>
+            </div>
         </div>
 
-        <div class="mt-4 text-center">
-            <h2 class="text-2xl font-semibold mb-2">Download Results</h2>
-            <a id="download-link" href="/download" class="bg-green-500 text-white p-2 rounded hover:bg-green-600 hidden">Download Result File</a>
-        </div>
-
-        <div id="results-table-container" class="mt-4 text-center">
+        <!-- Results Table -->
+        <div id="results-table-container" class="mt-6 text-center">
             <h2 class="text-2xl font-semibold mb-2">Results Table</h2>
-            <div class="overflow-x-auto inline-block max-w-full">
-                <!-- Results table will be dynamically created here -->
-                <table id="results-table" class="table-auto w-full border-collapse text-left bg-white shadow-lg rounded-lg">
-                    <thead>
-                        <tr class="bg-gray-200 text-gray-700">
+            <div class="overflow-x-auto inline-block max-w-full bg-white shadow-lg rounded-lg">
+                <table id="results-table" class="table-auto w-full border-collapse text-left bg-white rounded-lg">
+                    <thead class="sticky top-0 bg-gray-200 text-gray-700">
+                        <tr>
                             <th class="px-4 py-2 border">Source</th>
                             <th class="px-4 py-2 border">URL</th>
                             <th class="px-4 py-2 border">Status</th>
                         </tr>
                     </thead>
-                    <tbody class="text-gray-600"></tbody>
+                    <tbody class="text-gray-600">
+                        <!-- Dynamically populated rows go here -->
+                    </tbody>
                 </table>
             </div>
         </div>
+
+        <!-- Floating Download Button -->
+        <a id="download-link" href="/download" class="bg-gray-700 text-white p-3 rounded-full fixed bottom-4 right-4 shadow-lg hover:bg-gray-800 hidden inline-flex items-center">
+            <svg class="w-6 h-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Download
+        </a>
     </div>
 
+    <!-- Footer -->
+    <footer class="bg-gray-700 text-white py-4 mt-8">
+        <div class="container mx-auto text-center max-w-screen-lg">
+            <p>Built with Python &copy; 2024 </p>
+        </div>
+    </footer>
+
+    <div class="flex justify-end p-2 max-w-screen-lg mx-auto">
+        <button id="theme-toggle" class="text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-gray-400 focus:outline-none">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <path d="..."></path>
+            </svg>
+        </button>
+    </div>
+    
     <script>
 
         const outputElement = document.getElementById("output");
@@ -69,6 +126,22 @@
         let crawlRequest = null;
         let timerInterval = null;  // Store the interval ID
         let startTime = 0;
+        let progressBar = document.getElementById("progress-bar");
+
+        // Start progress bar animation
+        function animateProgressBar() {
+            progressBar.classList.add("animate-pulse");
+        }
+
+        // Stop progress bar animation
+        function stopProgressBar() {
+            progressBar.classList.remove("animate-pulse");
+        }
+
+        const themeToggle = document.getElementById("theme-toggle");
+        themeToggle.addEventListener("click", () => {
+            document.documentElement.classList.toggle("dark");
+        });
 
         form.addEventListener("submit", function(event) {
             event.preventDefault();
