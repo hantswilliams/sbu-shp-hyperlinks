@@ -1,0 +1,73 @@
+Dead Links:
+    https://ny-smoke-api.ahi-projects.com/apidocs - Status: Could not retrieve
+    https://www.linkedin.com/in/hantswilliams/ - Status: 999
+    https://scholar.google.com/citations?user=hnGtnzEAAAAJ&hl=en&oi=ao - Status: 429
+    https://www.linkedin.com/in/rlajmi/ - Status: 999
+
+
+Page: https://www.appliedhealthinformatics.com/ - Status: 200
+    https://www.appliedhealthinformatics.com/ - Status: 200
+    https://blog.appliedhealthinformatics.com - Status: 200
+    https://www.appliedhealthinformatics.com/#services - Status: 200
+    https://www.appliedhealthinformatics.com/projects - Status: 200
+    https://www.appliedhealthinformatics.com/people - Status: 200
+    https://www.appliedhealthinformatics.com/contact - Status: 200
+    https://discover.appliedhealthinformatics.com - Status: 200
+    https://book.datascience.appliedhealthinformatics.com/ - Status: 200
+    https://sdoh.ahi-projects.com - Status: 200
+    https://resume.appliedhealthinformatics.com - Status: 200
+    https://ny-smoke-api.ahi-projects.com/apidocs - Status: Could not retrieve
+    https://twitter.com/hants_williams - Status: 200
+    https://vercel.com - Status: 200
+    https://popsy.co - Status: 200
+    https://www.appliedhealthinformatics.com/_next/static/media/90475aac776488b6-s.p.woff2 - Status: 200
+    https://www.appliedhealthinformatics.com/_next/static/media/a34f9d1faa5f3315-s.p.woff2 - Status: 200
+    https://www.appliedhealthinformatics.com/_next/static/css/cdcc3de9dfac7362.css - Status: 200
+    https://appliedhealthinformatics.com - Status: 200
+    https://appliedhealthinformatics.com/site.webmanifest - Status: 200
+    https://www.appliedhealthinformatics.com/favicon-16x16.png - Status: 200
+    https://www.appliedhealthinformatics.com/favicon.ico - Status: 200
+    https://www.appliedhealthinformatics.com/apple-touch-icon.png - Status: 200
+    https://www.appliedhealthinformatics.com/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js - Status: 200
+    https://www.appliedhealthinformatics.com/_next/static/chunks/webpack-7a3d1b31b4e16645.js - Status: 200
+    https://www.appliedhealthinformatics.com/_next/static/chunks/8073f8aa-24858869616b9d94.js - Status: 200
+    https://www.appliedhealthinformatics.com/_next/static/chunks/8542-8015f1e2a617770d.js - Status: 200
+    https://www.appliedhealthinformatics.com/_next/static/chunks/main-app-1e19103298e55d57.js - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/#services - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/projects - Status: 200
+    https://nhit.org/ - Status: 200
+    https://parsleyhealth.com/ - Status: 200
+    https://yosi.health/ - Status: 200
+    https://healthprofessions.stonybrookmedicine.edu/cce/center-projects/LIDIC - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/people - Status: 200
+    https://www.linkedin.com/in/hantswilliams/ - Status: 999
+    https://scholar.google.com/citations?user=hnGtnzEAAAAJ&hl=en&oi=ao - Status: 429
+    https://www.linkedin.com/in/rlajmi/ - Status: 999
+
+Page: https://www.appliedhealthinformatics.com/contact - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/_next/static/media/90475aac776488b6-s.p.woff2 - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/_next/static/media/a34f9d1faa5f3315-s.p.woff2 - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/_next/static/css/cdcc3de9dfac7362.css - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/favicon-16x16.png - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/favicon.ico - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/apple-touch-icon.png - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/_next/static/chunks/webpack-7a3d1b31b4e16645.js - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/_next/static/chunks/8073f8aa-24858869616b9d94.js - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/_next/static/chunks/8542-8015f1e2a617770d.js - Status: 200
+
+Page: https://www.appliedhealthinformatics.com/_next/static/chunks/main-app-1e19103298e55d57.js - Status: 200
+
